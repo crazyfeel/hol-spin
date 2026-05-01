@@ -143,6 +143,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   transition:opacity .2s,transform .12s;}
 .btn-claim:hover:not(:disabled){opacity:.9;transform:translateY(-1px);}
 .btn-claim:disabled{opacity:.28;cursor:not-allowed;}
+.btn-claim[aria-disabled="true"]{opacity:.28;pointer-events:none;cursor:not-allowed;display:block;text-align:center;text-decoration:none;}
+a.btn-claim{display:block;text-align:center;text-decoration:none;}
 
 /* ── PLAYED ── */
 .played-wrap{text-align:center;max-width:300px;padding:48px 20px;}
@@ -204,7 +206,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
         <div style="font-size:10px;color:#6a4520;text-align:center;line-height:1.5">Tap to take a photo<br><span style="font-size:9px;color:#3a1a08">Required to unlock your reward</span></div>
       </div>
       <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(this)">
-      <button class="btn-claim" id="claimBtn" onclick="claimReward()" disabled>Claim My Reward &amp; Leave a Review ✦</button>
+      <a class="btn-claim" id="claimBtn" aria-disabled="true" href="#" onclick="return claimReward(this)">Claim My Reward &amp; Leave a Review ✦</a>
     </div>
   </div>
 
@@ -569,16 +571,23 @@ function handlePhoto(input){
     const a=document.getElementById('photoArea');
     a.innerHTML='<img src="'+e.target.result+'" alt="photo">';
     a.classList.add('has-photo');photoReady=true;
-    document.getElementById('claimBtn').disabled=false;
+    const cb=document.getElementById('claimBtn');
+    cb.removeAttribute('aria-disabled');
+    cb.style.opacity='1';
+    cb.style.pointerEvents='auto';
+    cb.style.cursor='pointer';
     toast('📸 Photo captured! Claim your reward.');
   };
   r.readAsDataURL(input.files[0]);
 }
 
-function claimReward(){
-  if(!photoReady){toast('📸 Please take a photo first!');return;}
+function claimReward(el){
+  if(!photoReady){toast('📸 Please take a photo first!');return false;}
+  // Set real href on the anchor — user tap follows it natively, no JS redirect needed
+  el.href = GOOGLE_REVIEW_URL;
+  el.target = '_blank';
   toast('Opening Google Reviews — add your photo there too! 📸');
-  setTimeout(()=>window.open(GOOGLE_REVIEW_URL,'_blank'),1200);
+  return true; // let the browser follow the link naturally
 }
 
 function confetti(){
